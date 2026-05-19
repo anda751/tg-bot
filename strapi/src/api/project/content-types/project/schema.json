@@ -28,12 +28,6 @@
       "relation": "oneToMany",
       "target": "api::project-membership.project-membership",
       "mappedBy": "project"
-    },
-    "User": {
-      "type": "relation",
-      "relation": "oneToMany",
-      "target": "api::project-membership.project-membership",
-      "mappedBy": "member"
     }
   }
 }

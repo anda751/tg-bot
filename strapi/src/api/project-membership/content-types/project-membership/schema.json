@@ -27,8 +27,7 @@
     "member": {
       "type": "relation",
       "relation": "manyToOne",
-      "target": "api::project.project",
-      "inversedBy": "User"
+      "target": "plugin::users-permissions.user"
     }
   }
 }

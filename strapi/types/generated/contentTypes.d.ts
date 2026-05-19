@@ -461,7 +461,10 @@ export interface ApiProjectMembershipProjectMembership
       'api::project-membership.project-membership'
     > &
       Schema.Attribute.Private;
-    member: Schema.Attribute.Relation<'manyToOne', 'api::project.project'>;
+    member: Schema.Attribute.Relation<
+      'manyToOne',
+      'plugin::users-permissions.user'
+    >;
     membershipStatus: Schema.Attribute.Enumeration<['Requested', 'Member']>;
     project: Schema.Attribute.Relation<'manyToOne', 'api::project.project'>;
     publishedAt: Schema.Attribute.DateTime;
@@ -502,10 +505,6 @@ export interface ApiProjectProject extends Struct.CollectionTypeSchema {
     updatedAt: Schema.Attribute.DateTime;
     updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
-    User: Schema.Attribute.Relation<
-      'oneToMany',
-      'api::project-membership.project-membership'
-    >;
   };
 }
 

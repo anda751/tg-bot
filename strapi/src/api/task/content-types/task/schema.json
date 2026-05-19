@@ -47,14 +47,12 @@
     "current_owner": {
       "type": "relation",
       "relation": "manyToOne",
-      "target": "plugin::users-permissions.user",
-      "inversedBy": "tasks"
+      "target": "plugin::users-permissions.user"
     },
     "previous_owner": {
       "type": "relation",
       "relation": "manyToOne",
-      "target": "plugin::users-permissions.user",
-      "inversedBy": "User"
+      "target": "plugin::users-permissions.user"
     },
     "handover_requested_by": {
       "type": "relation",

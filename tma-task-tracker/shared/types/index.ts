@@ -1,9 +1,7 @@
 // ============================================================
 // shared/types/index.ts
-// ใช้ field names ตรงกับ Strapi schema จริงทั้งหมด
+// แก้ไข: Project interface ใช้ project_name เท่านั้น (ไม่มี name?)
 // ============================================================
-
-// ------ Enums (ตรงกับ Strapi enum values จริง) ------
 
 export type TaskStatus =
   | "In Progress"
@@ -15,24 +13,22 @@ export type MembershipStatus = "Requested" | "Member";
 export type AccountStatus = "Pending" | "Approved";
 export type RoleLevel = "Manager" | "Staff";
 
-// ------ Core Entities ------
-
 export interface StrapiUser {
   id: number;
   username: string;
-  full_name?: string;           // field จริง
-  telegram_id?: string;         // field จริง
-  role_level?: RoleLevel;       // field จริง
-  account_status?: AccountStatus; // field จริง
+  full_name?: string;
+  telegram_id?: string;
+  role_level?: RoleLevel;
+  account_status?: AccountStatus;
   createdAt?: string;
   updatedAt?: string;
 }
 
+// ✅ แก้ไข: ใช้ project_name ตาม schema จริง ลบ name? ออก
 export interface Project {
   id: number;
   documentId: string;
-  project_name?: string;        // field จริงใน schema
-  name?: string;                // Strapi populate อาจ return ชื่อ display
+  project_name: string;   // field จริงใน schema
   deadline?: string;
   createdAt: string;
   updatedAt: string;
@@ -41,17 +37,17 @@ export interface Project {
 export interface Task {
   id: number;
   documentId: string;
-  task_name: string;            // field จริง
-  status_task: TaskStatus;      // field จริง
-  handover_reason?: string;     // field จริง
-  rejection_note?: string;      // field จริง
-  final_report?: string;        // field จริง
-  task_image_url?: string;      // field จริง
-  handover_at?: string;         // field จริง
+  task_name: string;
+  status_task: TaskStatus;
+  handover_reason?: string;
+  rejection_note?: string;
+  final_report?: string;
+  task_image_url?: string;
+  handover_at?: string;
   project: Project;
-  current_owner?: StrapiUser | null;      // field จริง
-  previous_owner?: StrapiUser | null;     // field จริง
-  handover_requested_by?: StrapiUser | null; // field จริง (เพิ่มใน schema แล้ว)
+  current_owner?: StrapiUser | null;
+  previous_owner?: StrapiUser | null;
+  handover_requested_by?: StrapiUser | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -59,14 +55,12 @@ export interface Task {
 export interface ProjectMembership {
   id: number;
   documentId: string;
-  membershipStatus: MembershipStatus; // field จริง (camelCase ใน schema)
+  membershipStatus: MembershipStatus;
   project?: Project;
-  member?: StrapiUser;          // field จริง (ไม่ใช่ user)
+  member?: StrapiUser;    // field จริง (ไม่ใช่ user)
   createdAt: string;
   updatedAt: string;
 }
-
-// ------ API Response Wrappers ------
 
 export interface StrapiListResponse<T> {
   data: T[];
@@ -85,17 +79,14 @@ export interface StrapiSingleResponse<T> {
   meta: Record<string, unknown>;
 }
 
-// ------ Request Payloads ------
-
-export interface RejectTaskPayload {
-  rejection_note: string;       // field จริง (ส่งไป Strapi controller)
-}
-
 export interface HandoverPayload {
-  handoverReason: string;       // body key ที่ controller รับ
+  handoverReason: string;
 }
 
-// ------ Bot Notification ------
+// ✅ แก้ไข: ใช้ rejectionReason ตรงกับ controller
+export interface RejectTaskPayload {
+  rejectionReason: string;
+}
 
 export type BotNotificationType =
   | "task_created"

@@ -1,7 +1,6 @@
 // ============================================================
 // bot/src/services/strapi.ts
-// Typed Axios wrapper for all Strapi API calls
-// Field names in query params use Strapi snake_case schema names
+// แก้ไข: rejectTask ส่ง rejectionReason (ตรงกับ controller)
 // ============================================================
 
 import axios, { AxiosInstance, AxiosError } from "axios";
@@ -12,10 +11,8 @@ import type {
   StrapiUser,
   StrapiListResponse,
   StrapiSingleResponse,
-  RejectTaskPayload,
 } from "@tma/shared/types";
 
-// Strapi populate fields (snake_case — must match schema exactly)
 const TASK_POPULATE = "project,current_owner,previous_owner,handover_requested_by";
 
 class StrapiService {
@@ -74,7 +71,6 @@ class StrapiService {
       params.set("filters[project][documentId][$eq]", filters.projectId);
     }
     if (filters?.status) {
-      // status values are Strapi enum: "In Progress", "Under Review", etc.
       params.set("filters[status_task][$eq]", filters.status);
     }
     if (filters?.ownerId) {
@@ -94,7 +90,6 @@ class StrapiService {
     return res.data.data;
   }
 
-  /** Tasks overdue: deadline passed + not Done */
   async getOverdueTasks(): Promise<Task[]> {
     const now = new Date().toISOString();
     const params = new URLSearchParams();
@@ -109,7 +104,6 @@ class StrapiService {
     return res.data.data;
   }
 
-  /** Tasks for morning summary: In Progress + Waiting for Pickup */
   async getPendingTasks(): Promise<Task[]> {
     const params = new URLSearchParams();
     params.set("populate", "project,current_owner");
@@ -133,10 +127,11 @@ class StrapiService {
     return res.data.data;
   }
 
+  // ✅ แก้ไข: เปลี่ยน key จาก rejection_note เป็น rejectionReason ให้ตรงกับ controller
   async rejectTask(documentId: string, reason: string): Promise<Task> {
     const res = await this.client.post<StrapiSingleResponse<Task>>(
       `/api/tasks/${documentId}/reject`,
-      { rejection_note: reason } satisfies Pick<RejectTaskPayload, "rejection_note">
+      { rejectionReason: reason }
     );
     return res.data.data;
   }

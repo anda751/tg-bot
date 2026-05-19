@@ -1,13 +1,11 @@
 // ============================================================
 // bot/src/utils/messages.ts
-// Thai message templates for every bot notification type
-// All field accesses use snake_case matching Strapi schema
+// แก้ไข: project.name → project.project_name ทุกจุด
 // ============================================================
 
 import type { Task, Project, StrapiUser } from "@tma/shared/types";
 import { TASK_STATUS_LABEL } from "@tma/shared/constants";
 
-/** Escape MarkdownV2 special chars */
 export function escMd(text: string): string {
   return text.replace(/[_*[\]()~`>#+\-=|{}.!\\]/g, "\\$&");
 }
@@ -16,7 +14,11 @@ function bold(text: string) {
   return `*${escMd(text)}*`;
 }
 
-/** Display name helper: prefer full_name, fallback to username */
+// ✅ helper: แสดงชื่อโปรเจกต์ (field จริงคือ project_name)
+function projectName(project: Project | undefined | null): string {
+  return project?.project_name ?? "ไม่ระบุโปรเจกต์";
+}
+
 function displayName(user: StrapiUser): string {
   return user.full_name ?? user.username;
 }
@@ -33,13 +35,12 @@ function taskLine(task: Task): string {
 // ------ Group Announcements ------
 
 export function msgTaskCreated(task: Task): string {
-  const creator = task.current_owner;
   return [
     `📋 ${bold("งานใหม่ถูกสร้างแล้ว")}`,
     ``,
-    `โปรเจกต์: ${bold(task.project.name)}`,
+    `โปรเจกต์: ${bold(projectName(task.project))}`,
     `ชื่องาน: ${bold(task.task_name)}`,
-    `ผู้รับผิดชอบ: ${ownerHandle(creator)}`,
+    `ผู้รับผิดชอบ: ${ownerHandle(task.current_owner)}`,
     `สถานะ: ${escMd(TASK_STATUS_LABEL["In Progress"])}`,
   ].join("\n");
 }
@@ -48,7 +49,7 @@ export function msgTaskDone(task: Task): string {
   return [
     `✅ ${bold("ปิดงานเรียบร้อยแล้ว")}`,
     ``,
-    `โปรเจกต์: ${bold(task.project.name)}`,
+    `โปรเจกต์: ${bold(projectName(task.project))}`,
     `ชื่องาน: ${bold(task.task_name)}`,
     `ดำเนินการโดย: ${ownerHandle(task.current_owner)}`,
     ``,
@@ -61,15 +62,13 @@ export function msgTaskHandoverAvailable(task: Task): string {
   return [
     `📬 ${bold("มีงานรอรับช่วงต่อ")}`,
     ``,
-    `โปรเจกต์: ${bold(task.project.name)}`,
+    `โปรเจกต์: ${bold(projectName(task.project))}`,
     `ชื่องาน: ${bold(task.task_name)}`,
     `ส่งต่อโดย: ${prev ? `@${escMd(prev.username)}` : "\\(ไม่ระบุ\\)"}`,
     task.handover_reason ? `เหตุผล: ${escMd(task.handover_reason)}` : "",
     ``,
     `_กด \\[รับงานนี้ต่อ\\] ใน Mini App เพื่อรับช่วงต่อ_`,
-  ]
-    .filter(Boolean)
-    .join("\n");
+  ].filter(Boolean).join("\n");
 }
 
 export function msgHandoverCancelled(task: Task, byUser?: StrapiUser): string {
@@ -90,7 +89,7 @@ export function msgDeadlineWarning(project: Project, hoursLeft: number): string 
   return [
     `⚠️ ${bold("ใกล้ถึงเดดไลน์")}`,
     ``,
-    `โปรเจกต์: ${bold(project.name)}`,
+    `โปรเจกต์: ${bold(projectName(project))}`,
     `เหลือเวลา: ${bold(`${hoursLeft} ชั่วโมง`)}`,
     ``,
     `_รีบเคลียร์งานค้างให้เสร็จก่อนหมดเวลา_`,
@@ -101,7 +100,7 @@ export function msgTaskOverdue(task: Task): string {
   return [
     `🚨 ${bold("งานเลยกำหนด\\!")}`,
     ``,
-    `โปรเจกต์: ${bold(task.project.name)}`,
+    `โปรเจกต์: ${bold(projectName(task.project))}`,
     `ชื่องาน: ${bold(task.task_name)}`,
     `ผู้รับผิดชอบปัจจุบัน: ${ownerHandle(task.current_owner)}`,
     `สถานะ: ${escMd(TASK_STATUS_LABEL[task.status_task])}`,
@@ -117,35 +116,25 @@ export function msgMorningSummary(tasks: Task[]): string {
     ].join("\n");
   }
 
-  // NOTE: "Rejected" is not a Strapi status — tasks with rejection_note will be "In Progress"
-  // So we split In Progress into: ถูกตีกลับ (has rejection_note) vs กำลังทำ (no rejection_note)
-  const inProgressNormal = tasks.filter(
-    (t) => t.status_task === "In Progress" && !t.rejection_note
-  );
-  const inProgressRejected = tasks.filter(
-    (t) => t.status_task === "In Progress" && !!t.rejection_note
-  );
-  const waitingPickup = tasks.filter(
-    (t) => t.status_task === "Waiting for Pickup"
-  );
+  const inProgressNormal  = tasks.filter(t => t.status_task === "In Progress" && !t.rejection_note);
+  const inProgressRejected = tasks.filter(t => t.status_task === "In Progress" && !!t.rejection_note);
+  const waitingPickup     = tasks.filter(t => t.status_task === "Waiting for Pickup");
 
   const lines: string[] = [`☀️ ${bold("สรุปงานค้างประจำวัน")}`, ``];
 
   if (inProgressNormal.length > 0) {
     lines.push(`🔨 ${bold(`กำลังดำเนินงาน \\(${inProgressNormal.length}\\)`)}`);
-    inProgressNormal.forEach((t) => lines.push(taskLine(t)));
+    inProgressNormal.forEach(t => lines.push(taskLine(t)));
     lines.push("");
   }
-
   if (waitingPickup.length > 0) {
     lines.push(`📬 ${bold(`รอคนรับช่วงต่อ \\(${waitingPickup.length}\\)`)}`);
-    waitingPickup.forEach((t) => lines.push(taskLine(t)));
+    waitingPickup.forEach(t => lines.push(taskLine(t)));
     lines.push("");
   }
-
   if (inProgressRejected.length > 0) {
     lines.push(`❌ ${bold(`ถูกตีกลับ — รอแก้ไข \\(${inProgressRejected.length}\\)`)}`);
-    inProgressRejected.forEach((t) => lines.push(taskLine(t)));
+    inProgressRejected.forEach(t => lines.push(taskLine(t)));
   }
 
   return lines.join("\n");
@@ -157,18 +146,13 @@ export function dmTaskSubmittedForReview(task: Task): string {
   return [
     `🔔 ${bold("มีงานส่งตรวจใหม่")}`,
     ``,
-    `โปรเจกต์: ${bold(task.project.name)}`,
+    `โปรเจกต์: ${bold(projectName(task.project))}`,
     `ชื่องาน: ${bold(task.task_name)}`,
     `ส่งโดย: ${ownerHandle(task.current_owner)}`,
-    ``,
-    task.final_report
-      ? `รายงาน: _${escMd(task.final_report)}_`
-      : "",
+    task.final_report ? `\nรายงาน: _${escMd(task.final_report)}_` : "",
     ``,
     `กรุณาตรวจสอบใน Manager Dashboard`,
-  ]
-    .filter((l) => l !== undefined)
-    .join("\n");
+  ].filter(l => l !== undefined).join("\n");
 }
 
 export function dmTaskRejected(task: Task): string {
@@ -189,7 +173,7 @@ export function dmHandoverRequested(task: Task, requester: StrapiUser): string {
     `🤝 ${bold("คำขอรับงานช่วงต่อ")}`,
     ``,
     `ชื่องาน: ${bold(task.task_name)}`,
-    `โปรเจกต์: ${bold(task.project.name)}`,
+    `โปรเจกต์: ${bold(projectName(task.project))}`,
     `ผู้ขอรับ: @${escMd(requester.username)}${requester.full_name ? ` \\(${escMd(requester.full_name)}\\)` : ""}`,
     ``,
     `กรุณากด ${bold("[อนุมัติ]")} หรือ ${bold("[ปฏิเสธ]")} ใน Mini App ภายใน 30 นาที`,
