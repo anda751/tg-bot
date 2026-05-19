@@ -1,0 +1,65 @@
+{
+  "kind": "collectionType",
+  "collectionName": "tasks",
+  "info": {
+    "singularName": "task",
+    "pluralName": "tasks",
+    "displayName": "task"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "task_name": {
+      "type": "string"
+    },
+    "handover_reason": {
+      "type": "text"
+    },
+    "task_image_url": {
+      "type": "string"
+    },
+    "final_report": {
+      "type": "text"
+    },
+    "rejection_note": {
+      "type": "string"
+    },
+    "handover_at": {
+      "type": "datetime"
+    },
+    "status_task": {
+      "type": "enumeration",
+      "enum": [
+        "In Progress",
+        "Waiting for Pickup",
+        "Under Review",
+        "Done"
+      ]
+    },
+    "project": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::project.project",
+      "inversedBy": "tasks"
+    },
+    "current_owner": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "plugin::users-permissions.user",
+      "inversedBy": "tasks"
+    },
+    "previous_owner": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "plugin::users-permissions.user",
+      "inversedBy": "User"
+    },
+    "handover_requested_by": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "plugin::users-permissions.user"
+    }
+  }
+}

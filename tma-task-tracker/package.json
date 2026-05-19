@@ -1,0 +1,22 @@
+{
+  "name": "tma-task-tracker",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "bot",
+    "mini-app",
+    "shared"
+  ],
+  "scripts": {
+    "dev:bot": "npm run dev --workspace=bot",
+    "dev:app": "npm run dev --workspace=mini-app",
+    "dev": "concurrently \"npm run dev:bot\" \"npm run dev:app\"",
+    "build:bot": "npm run build --workspace=bot",
+    "build:app": "npm run build --workspace=mini-app",
+    "build": "npm run build:bot && npm run build:app",
+    "typecheck": "npm run typecheck --workspace=bot && npm run typecheck --workspace=mini-app"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
